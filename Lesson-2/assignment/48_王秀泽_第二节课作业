@@ -16,7 +16,8 @@ contract Payroll {
     
     uint constant payDuration = 10 seconds;
     address owner;
-    Employee[] employees;    
+    Employee[] employees; 
+    uint Totalsalary;
     
     struct Employee {
         address id;
@@ -29,6 +30,7 @@ contract Payroll {
     function Payroll() {
         owner = msg.sender;
     }
+    
     
     function _partialPaid(Employee employee) private {
         uint payment = employee.salary * (now - employee.lastPayday) / payDuration;
@@ -48,14 +50,15 @@ contract Payroll {
         var (employee, index) = _findEmployee(employeeId);
         assert(employee.id == 0x0);
         employees.push(Employee(employeeId, salary * 1 ether, now));
+        Totalsalary=Totalsalary+employees[employees.length-1].salary;
     }
     
     function removeEmployee(address employeeId){
         require(msg.sender == owner);
         var(employee,index) = _findEmployee(employeeId);
         assert(employee.id != 0x0);
-        
         _partialPaid(employee);
+        Totalsalary=Totalsalary-employee.salary;
         delete employees[index];
         employees[index] = employees[employees.length-1];
         employees.length -= 1;
@@ -68,8 +71,10 @@ contract Payroll {
         var(employee,index) = _findEmployee(employeeId);
         assert(employee.id != 0x0);
         _partialPaid(employee);
-        employees[index].salary = salary * 1 ether;
-        employees[index].lastPayday = now;
+        Totalsalary =Totalsalary-employee.salary; 
+        employees[index].salary = salary * 1 ether; 
+        employees[index].lastPayday = now; 
+        Totalsalary =Totalsalary+ employees[index].salary; 
         return;
             
     }
@@ -79,11 +84,8 @@ contract Payroll {
     }
     
     function calculateRunway() returns (uint){
-        uint totalSalary = 0;
-        for (uint i=0; i < employees.length; i++){
-            totalSalary += employees.salary;
-        }
-        return this.balance / totalSalary;
+
+        return this.balance / Totalsalary;
     }
     
     
@@ -113,3 +115,4 @@ contract Payroll {
         employee.id.transfer(employee.salary);
     }
 }
+
